@@ -6,39 +6,27 @@
 /*   By: zel-fati <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/05 04:44:16 by zel-fati          #+#    #+#             */
-/*   Updated: 2026/07/08 02:43:43 by zel-fati         ###   ########.fr       */
+/*   Updated: 2026/07/12 04:48:00 by zel-fati         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <pthread.h>
-
-void	*func(void *arg)
-{
-	printf("thread created\n");
-	return NULL;
-}
+#include "codexion.h"
 
 int	main(int ac, char **av)
 {
-	printf("program entry\n");
-	
-	/*int i = 0;
+	t_config	conf;
 
-	printf("%d\n", ac);
-
-	while (i < ac)
+	if (!arg_parser(ac, av, &conf))
 	{
-		printf("%s\n", av[i]);
-		i++;
-	}*/
-
-	pthread_t thread1;	
-
-	pthread_create(&thread1, NULL, func, NULL);
-
-	pthread_join(thread1, NULL);
-
-	return (0);
+		write(2, "ERROR\n", 6);
+		return (1);
+	}
+	printf("nb_codes 	%d\n", conf.nb_coders);
+	printf("time_to_burnout %d\n", conf.time_to_burnout);
+	printf("time_to_compile %d\n", conf.time_to_compile);
+	printf("time_to_debug 	%d\n", conf.time_to_debug);
+	printf("time_to_refacto	%d\n", conf.time_to_refactor);
+	printf("nb_of_comp_req 	%d\n", conf.nb_of_comp_req);
+	printf("dongle_cooldown %d\n", conf.dongle_cooldown);
+	printf("scheduler 	%d\n", conf.scheduler);
 }

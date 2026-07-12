@@ -6,7 +6,7 @@
 /*   By: zel-fati <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/11 03:51:41 by zel-fati          #+#    #+#             */
-/*   Updated: 2026/07/11 04:13:04 by zel-fati         ###   ########.fr       */
+/*   Updated: 2026/07/12 03:00:48 by zel-fati         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <pthread.h>
 # include <stdio.h>
 # include <stdlib.h>
+# include <string.h>
 # include <time.h>
 # include <unistd.h>
 
@@ -33,5 +34,10 @@ typedef struct s_config
 	int	dongle_cooldown;
 	int	scheduler;
 }		t_config;
+
+int		validate_args(int ac, char **av);
+int		ft_atoi(char *nptr, int *out);
+int		scheduler_parser(char *s, int *out);
+int		arg_parser(int ac, char **av, t_config *conf);
 
 #endif

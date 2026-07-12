@@ -6,7 +6,7 @@
 #    By: zel-fati <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/07/06 21:25:05 by zel-fati          #+#    #+#              #
-#    Updated: 2026/07/06 21:33:35 by zel-fati         ###   ########.fr        #
+#    Updated: 2026/07/12 03:04:01 by zel-fati         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ CFLAGS	= -Wall -Wextra -Werror -pthread
 
 NAME	= codexion
 
-SRC	= main.c
+SRC	= main.c parsing_helper.c parsing_helper2.c
 
 OBJ	= $(SRC:%.c=%.o)
 

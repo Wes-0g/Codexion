@@ -6,7 +6,7 @@
 /*   By: zel-fati <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/11 05:17:08 by zel-fati          #+#    #+#             */
-/*   Updated: 2026/07/12 02:59:23 by zel-fati         ###   ########.fr       */
+/*   Updated: 2026/07/12 04:20:56 by zel-fati         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,24 +80,26 @@ int	ft_atoi(char *nptr, int *out)
 {
 	long long	res;
 	int			i;
+	int			sign;
 
 	res = 0;
 	i = 0;
+	sign = 1;
 	while (nptr[i] == ' ' || (nptr[i] >= 9 && nptr[i] <= 13))
 		i++;
 	if (nptr[i] == '+' || nptr[i] == '-')
 	{
 		if (nptr[i] == '-')
-			return (0);
+			sign = -1;
 		i++;
 	}
 	while (nptr[i] >= '0' && nptr[i] <= '9')
 	{
 		res = res * 10 + (nptr[i] - '0');
-		if (res > 2147483647)
+		if ((sign == 1 && res > 2147483647) || (sign == -1 && res > 2147483648))
 			return (0);
 		i++;
 	}
-	*out = (int)(res);
+	*out = (int)(res * sign);
 	return (1);
 }

@@ -6,7 +6,7 @@
 /*   By: zel-fati <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/11 03:51:41 by zel-fati          #+#    #+#             */
-/*   Updated: 2026/07/12 03:00:48 by zel-fati         ###   ########.fr       */
+/*   Updated: 2026/07/12 04:46:43 by zel-fati         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ typedef struct s_config
 	int	time_to_compile;
 	int	time_to_debug;
 	int	time_to_refactor;
-	int	nb_of_compiles_required;
+	int	nb_of_comp_req;
 	int	dongle_cooldown;
 	int	scheduler;
 }		t_config;

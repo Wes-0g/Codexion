@@ -23,6 +23,11 @@
 # define FIFO 0
 # define EDF 1
 
+typedef struct s_coder t_coder;
+typedef struct s_dongle t_dongle;
+typedef struct s_heap t_heap;
+typedef struct s_sim t_sim;
+
 typedef struct s_config
 {
 	int	nb_coders;
@@ -34,6 +39,36 @@ typedef struct s_config
 	int	dongle_cooldown;
 	int	scheduler;
 }		t_config;
+
+struct s_sim
+{
+	t_config args;
+	t_coder *coders;
+	t_dongle *dongles;
+};
+
+struct s_dongle
+{
+	pthread_mutex_t mtx;
+	pthread_cond_t cond;
+	int id;
+	long long available_at;
+	t_heap *heap;
+};
+
+struct s_coder
+{
+	pthread_t thread;
+	int id;
+	t_dongle *left;
+	t_dongle *right;
+	t_sim *sim;
+};
+
+struct s_heap
+{
+
+};
 
 int		validate_args(int ac, char **av);
 int		ft_atoi(char *nptr, int *out);

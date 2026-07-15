@@ -24,7 +24,7 @@ int	conf_validation(t_config *conf)
 		return (0);
 	if (conf->time_to_refactor < 0)
 		return (0);
-	if (conf->nb_of_comp_req <= 0)
+	if (conf->nb_of_comp_req < 0)
 		return (0);
 	if (conf->dongle_cooldown < 0)
 		return (0);

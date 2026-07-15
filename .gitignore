@@ -60,3 +60,4 @@ codexion
 *.py
 .idea/
 .vscode/
+*.json

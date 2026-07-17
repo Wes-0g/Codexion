@@ -6,7 +6,7 @@
 /*   By: zel-fati <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/11 03:51:41 by zel-fati          #+#    #+#             */
-/*   Updated: 2026/07/12 04:46:43 by zel-fati         ###   ########.fr       */
+/*   Updated: 2026/07/17 04:48:52 by zel-fati         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,10 @@
 # define FIFO 0
 # define EDF 1
 
-typedef struct s_coder t_coder;
-typedef struct s_dongle t_dongle;
-typedef struct s_heap t_heap;
-typedef struct s_sim t_sim;
+typedef struct s_coder	t_coder;
+typedef struct s_dongle	t_dongle;
+typedef struct s_heap	t_heap;
+typedef struct s_sim	t_sim;
 
 typedef struct s_config
 {
@@ -38,41 +38,48 @@ typedef struct s_config
 	int	nb_of_comp_req;
 	int	dongle_cooldown;
 	int	scheduler;
-}		t_config;
+}	t_config;
 
-struct s_sim
+struct	s_sim
 {
-	t_config args;
-	t_coder *coders;
-	t_dongle *dongles;
+	t_config	args;
+	pthread_mutex_t		log_mtx;
+	t_coder		*coders;
+	t_dongle	*dongles;
 };
 
-struct s_dongle
+struct	s_dongle
 {
-	pthread_mutex_t mtx;
-	pthread_cond_t cond;
-	int id;
-	long long available_at;
-	t_heap *heap;
+	pthread_mutex_t	d_mtx;
+	pthread_cond_t	cond;
+	int	id;
+	long long	available_at;
+	t_heap	*heap;
 };
 
-struct s_coder
+struct	s_coder
 {
-	pthread_t thread;
-	int id;
-	t_dongle *left;
-	t_dongle *right;
-	t_sim *sim;
+	pthread_t			thread;
+	t_dongle			*left;
+	t_dongle			*right;
+	t_sim				*sim;
+	int	id;
+	long long	request_time;
+	long long	last_compile_start;
+	int	compile_counter;
 };
 
-struct s_heap
+typedef struct	s_heap
 {
+	t_coder	**coders;
+	int	size;
+	int	capacity;
 
-};
+}	t_heap;
 
-int		validate_args(int ac, char **av);
-int		ft_atoi(char *nptr, int *out);
-int		scheduler_parser(char *s, int *out);
-int		arg_parser(int ac, char **av, t_config *conf);
+int	validate_args(int ac, char **av);
+int	ft_atoi(char *nptr, int *out);
+int	scheduler_parser(char *s, int *out);
+int	arg_parser(int ac, char **av, t_config *conf);
 
 #endif

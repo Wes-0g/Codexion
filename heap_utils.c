@@ -21,7 +21,7 @@ void	swap(t_coder **a, t_coder **b)
 	*b = temp;
 }
 
-long long	get_priority(t_coder *coder, int scheduler)
+static long long	get_priority(t_coder *coder, int scheduler)
 {
 	if (scheduler == FIFO)
 		return (coder->request_time);

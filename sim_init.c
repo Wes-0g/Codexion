@@ -63,7 +63,7 @@ static int	init_coders(t_sim *sim)
 	while (i < sim->conf.nb_coders)
 	{
 		sim->coders[i].id = i + 1;
-		sim->coders[i].compile_counter = 0;
+		sim->coders[i].compile_count = 0;
 		sim->coders[i].request_time = 0;
 		sim->coders[i].last_compile_start = 0;
 		sim->coders[i].in_heap = 0;

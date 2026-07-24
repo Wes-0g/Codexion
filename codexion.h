@@ -6,7 +6,7 @@
 /*   By: zel-fati <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/11 03:51:41 by zel-fati          #+#    #+#             */
-/*   Updated: 2026/07/20 01:11:21 by zel-fati         ###   ########.fr       */
+/*   Updated: 2026/07/23 06:11:09 by zel-fati         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,15 +42,21 @@ typedef struct s_config
 
 struct	s_sim
 {
-	long long start_ms;
+	long long	start_ms;
 	int	stop;
 	int	coders_ready;
-	int simulation_started;
+	int	simulation_started;
 
 	t_config	conf;
 	pthread_mutex_t		log_mtx;
 	pthread_mutex_t sim_mtx;
 	pthread_cond_t	cond;
+
+	int	dongles_init;
+	int	coders_init;
+	int	log_mtx_init;
+	int	sim_mtx_init;
+	int	cond_init;
 
 	t_coder		*coders;
 	t_dongle	*dongles;
@@ -60,8 +66,8 @@ struct	s_dongle
 {
 	int	id;
 	int	mutex_init;
-	pthread_mutex_t	d_mtx;
 	long long	available_at;
+	pthread_mutex_t	d_mtx;
 	t_heap	*heap;
 };
 
@@ -75,7 +81,8 @@ struct	s_coder
 	long long	request_time;
 	long long	deadline;
 	long long	last_compile_start;
-	int	compile_counter;
+	int	compile_count;
+	int in_heap;
 };
 
 struct	s_heap
@@ -104,5 +111,7 @@ t_heap	*create_heap(int capacity, t_config conf);
 void	heap_destroy(t_heap *heap);
 
 long long	get_time_ms(void);
+
+int	init_sim(t_sim *sim);
 
 #endif

@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-int	conf_validation(t_config *conf)
+static int	conf_validation(t_config *conf)
 {
 	if (conf->nb_coders <= 0)
 		return (0);

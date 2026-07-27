@@ -66,7 +66,6 @@ static int	init_coders(t_sim *sim)
 		sim->coders[i].compile_count = 0;
 		sim->coders[i].request_time = 0;
 		sim->coders[i].last_compile_start = 0;
-		sim->coders[i].in_heap = 0;
 		sim->coders[i].deadline = sim->coders[i].last_compile_start
 			+ sim->conf.time_to_burnout;
 		sim->coders[i].right = &sim->dongles[(i + 1) % sim->conf.nb_coders];

@@ -122,3 +122,35 @@ void	release_dongle(t_coder *coder)
 	}
 	pthread_cond_broadcast(&coder->sim->cond);
 }
+
+void *routine(void *arg)
+{
+	t_coder *coder;
+	t_sim *sim;
+
+	coder = (t_coder *)arg;
+	sim = coder->sim;
+
+	while (!flag_stop(sim))
+	{
+		if (!acquire_dongles(coder))
+			break;
+		pthread_mutex_lock(&coder->sim->sim_mtx);
+		coder->last_compile_start = get_time_ms();
+		pthread_mutex_unlock(&coder->sim->sim_mtx);
+
+		print_log(coder, "is compiling");
+		usleep(sim->conf.time_to_compile * 1000);
+		release_dongle(coder);
+
+		pthread_mutex_lock(&coder->sim->sim_mtx);
+		coder->compile_count++;
+		pthread_mutex_unlock(&coder->sim->sim_mtx);
+
+		print_log(coder, "is debugging");
+		usleep(sim->conf.time_to_debug * 1000);
+		print_log(coder, "is refactoring");
+		usleep(sim->conf.time_to_refactor * 1000);
+	}
+	return (NULL);
+}

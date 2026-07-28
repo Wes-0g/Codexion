@@ -83,7 +83,6 @@ struct	s_coder
 	long long	deadline;
 	long long	last_compile_start;
 	int	compile_count;
-	int in_heap;
 };
 
 struct	s_heap
@@ -114,5 +113,12 @@ void	heap_destroy(t_heap *heap);
 long long	get_time_ms(void);
 
 int	init_sim(t_sim *sim);
+int	flag_stop(t_sim *sim);
+void set_stop(t_sim *sim);
+void	print_log(t_coder *coder, char *msg);
+int	acquire_dongles(t_coder *coder);
+void	custom_sleep(t_sim *sim, long long time);
+void	*routine(void *arg);
+void	*monitor_routine(void *arg);
 
 #endif

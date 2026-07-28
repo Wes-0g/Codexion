@@ -12,30 +12,53 @@
 
 #include "codexion.h"
 
-void	set_stop(t_sim *sim)
+static int	can_take_dongle(t_coder *coder, t_dongle *lo, t_dongle *hi)
 {
-	pthread_mutex_lock(&sim->sim_mtx);
-	sim->stop = 1;
-	pthread_cond_broadcast(&sim->cond);
-	pthread_mutex_unlock(&sim->sim_mtx);
+	return (get_time_ms() >= hi->available_at
+		&& get_time_ms() >= hi->available_at
+		&& heap_peek(lo->heap) == coder
+		&& heap_peek(lo->heap) == coder);
 }
 
-void	print_log(t_coder *coder, char *msg)
+static void	grab_dongle(t_coder *coder, t_dongle *dongle)
 {
-	pthread_mutex_lock(&coder->sim->log_mtx);
-	printf("%lld %d %s\n", get_time_ms() - coder->sim->start_ms, coder->id,
-		msg);
-	pthread_mutex_unlock(&coder->sim->log_mtx);
+	dongle->available_at = LLONG_MAX;
+	heap_pop(dongle->heap);
+	print_log(coder, "has taken a dongle");
 }
 
-int	flag_stop(t_sim *sim)
+static void	acquire_clean(t_coder *coder, t_dongle *lo, t_dongle *hi)
 {
-	int	stop;
+	heap_remove(lo->heap, coder);
+	if (lo != hi)
+	{
+		heap_remove(hi->heap, coder);
+		pthread_mutex_unlock(&hi->d_mtx);
+	}
+	pthread_mutex_unlock(&lo->d_mtx);
+}
 
-	pthread_mutex_lock(&sim->sim_mtx);
-	stop = sim->stop;
-	pthread_mutex_unlock(&sim->sim_mtx);
-	return (stop);
+static int	try_acquire(t_coder *coder, t_dongle *lo, t_dongle *hi)
+{
+	pthread_mutex_lock(&lo->d_mtx);
+	heap_push(lo->heap, coder);
+	if (lo != hi)
+	{
+		pthread_mutex_lock(&hi->d_mtx);
+		heap_push(hi->heap, coder);
+	}
+	if (can_take_dongle(coder, lo, hi))
+	{
+		grab_dongle(coder, lo);
+		if (lo != hi)
+		{
+			grab_dongle(coder, hi);
+			pthread_mutex_unlock(&hi->d_mtx);
+		}
+		pthread_mutex_unlock(&lo->d_mtx);
+		return (1);
+	}
+	return (0);
 }
 
 int	acquire_dongles(t_coder *coder)
@@ -53,104 +76,16 @@ int	acquire_dongles(t_coder *coder)
 		lo = coder->right;
 		hi = coder->left;
 	}
+	coder->request_time = get_time_ms();
 	while (!flag_stop(coder->sim))
 	{
-		pthread_mutex_lock(&lo->d_mtx);
-		coder->request_time = get_time_ms();
-		heap_push(lo->heap, coder);
-		if (lo != hi)
-		{
-			pthread_mutex_lock(&hi->d_mtx);
-			heap_push(hi->heap, coder);
-		}
-		if (get_time_ms() >= lo->available_at
-			&& get_time_ms() >= hi->available_at
-			&& heap_peek(lo->heap) == coder
-			&& heap_peek(hi->heap) == coder)
-		{
-			lo->available_at = LLONG_MAX;
-			heap_pop(lo->heap);
-			print_log(coder, "has taken a dongle");
-			if (lo != hi)
-			{
-				hi->available_at = LLONG_MAX;
-				heap_pop(hi->heap);
-				print_log(coder, "has taken a dongle");
-				pthread_mutex_unlock(&hi->d_mtx);
-			}
-			pthread_mutex_unlock(&lo->d_mtx);
+		if (try_acquire(coder, lo, hi))
 			return (1);
-		}
-		heap_remove(lo->heap, coder);
-		if (lo != hi)
-		{
-			heap_remove(hi->heap, coder);
-			pthread_mutex_unlock(&hi->d_mtx);
-		}
-		pthread_mutex_unlock(&lo->d_mtx);
+		acquire_clean(coder, lo, hi);
 		pthread_mutex_lock(&coder->sim->sim_mtx);
 		if (!coder->sim->stop)
 			pthread_cond_wait(&coder->sim->cond, &coder->sim->sim_mtx);
 		pthread_mutex_unlock(&coder->sim->sim_mtx);
 	}
 	return (0);
-}
-
-void	release_dongle(t_coder *coder)
-{
-	t_dongle	*lo;
-	t_dongle	*hi;
-
-	if (coder->left->id < coder->right->id)
-	{
-		lo = coder->left;
-		hi = coder->right;
-	}
-	else
-	{
-		lo = coder->right;
-		hi = coder->left;
-	}
-	pthread_mutex_lock(&lo->d_mtx);
-	lo->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
-	pthread_mutex_unlock(&lo->d_mtx);
-	if (hi != lo)
-	{
-		pthread_mutex_lock(&hi->d_mtx);
-		hi->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
-		pthread_mutex_unlock(&hi->d_mtx);
-	}
-	pthread_cond_broadcast(&coder->sim->cond);
-}
-
-void *routine(void *arg)
-{
-	t_coder *coder;
-	t_sim *sim;
-
-	coder = (t_coder *)arg;
-	sim = coder->sim;
-
-	while (!flag_stop(sim))
-	{
-		if (!acquire_dongles(coder))
-			break;
-		pthread_mutex_lock(&coder->sim->sim_mtx);
-		coder->last_compile_start = get_time_ms();
-		pthread_mutex_unlock(&coder->sim->sim_mtx);
-
-		print_log(coder, "is compiling");
-		usleep(sim->conf.time_to_compile * 1000);
-		release_dongle(coder);
-
-		pthread_mutex_lock(&coder->sim->sim_mtx);
-		coder->compile_count++;
-		pthread_mutex_unlock(&coder->sim->sim_mtx);
-
-		print_log(coder, "is debugging");
-		usleep(sim->conf.time_to_debug * 1000);
-		print_log(coder, "is refactoring");
-		usleep(sim->conf.time_to_refactor * 1000);
-	}
-	return (NULL);
 }

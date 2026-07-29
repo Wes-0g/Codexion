@@ -80,6 +80,17 @@ static int	refactor(t_coder *coder)
 	return (!flag_stop(sim));
 }
 
+static void	wait_for_start(t_sim *sim)
+{
+	pthread_mutex_lock(&sim->sim_mtx);
+	sim->coders_ready++;
+	if (sim->coders_ready == sim->conf.nb_coders)
+		pthread_cond_broadcast(&sim->cond);
+	while (!sim->simulation_started && !sim->stop)
+		pthread_cond_wait(&sim->cond, &sim->sim_mtx);
+	pthread_mutex_unlock(&sim->sim_mtx);
+}
+
 void	*routine(void *arg)
 {
 	t_coder	*coder;
@@ -87,16 +98,19 @@ void	*routine(void *arg)
 
 	coder = (t_coder *)arg;
 	sim = coder->sim;
+	wait_for_start(sim);
+	if (flag_stop(sim))
+		return (NULL);
 	while (!flag_stop(sim))
 	{
 		if (!acquire_dongles(coder))
 			break ;
-		if (compile(coder))
+		if (!compile(coder))
 			break ;
 		release_dongle(coder);
-		if (debug(coder))
+		if (!debug(coder))
 			break ;
-		if (refactor(coder))
+		if (!refactor(coder))
 			break ;
 	}
 	return (NULL);

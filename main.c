@@ -12,22 +12,44 @@
 
 #include "codexion.h"
 
-static int	create_coders(t_sim *sim)
+static void	start_sim(t_sim *sim)
+{
+	int	i;
+
+	pthread_mutex_lock(&sim->sim_mtx);
+	while (sim->coders_ready < sim->conf.nb_coders && !sim->stop)
+		pthread_cond_wait(&sim->cond, &sim->sim_mtx);
+	sim->start_ms = get_time_ms();
+	i = 0;
+	while (i < sim->conf.nb_coders)
+	{
+		sim->coders[i].last_compile_start = sim->start_ms;
+		sim->coders[i].deadline = sim->start_ms + sim->conf.time_to_burnout;
+		i++;
+	}
+	sim->simulation_started = 1;
+	pthread_cond_broadcast(&sim->cond);
+	pthread_mutex_unlock(&sim->sim_mtx);
+}
+
+static int	create_threads(t_sim *sim)
 {
 	int	i;
 
 	i = 0;
 	while (i < sim->conf.nb_coders)
 	{
-		if (0 != pthread_create(&sim->coders[i].thread,
-				NULL, routine, &sim->coders[i]))
+		if (0 != pthread_create(&sim->coders[i].thread, NULL, routine,
+				&sim->coders[i]))
 			return (0);
 		i++;
 	}
+	if (0 != pthread_create(&sim->monitor, NULL, monitor_routine, sim))
+		return (0);
 	return (1);
 }
 
-static int	threads_join(t_sim *sim, pthread_t monitor)
+static int	threads_join(t_sim *sim)
 {
 	int	i;
 
@@ -36,8 +58,9 @@ static int	threads_join(t_sim *sim, pthread_t monitor)
 	{
 		if (0 != pthread_join(sim->coders[i].thread, NULL))
 			return (0);
+		i++;
 	}
-	if (0 != pthread_join(monitor, NULL))
+	if (0 != pthread_join(sim->monitor, NULL))
 		return (0);
 	return (1);
 }
@@ -61,17 +84,13 @@ int	main(int ac, char **av)
 {
 	t_sim	sim;
 
+	// if anythings fails, clean up
 	if (!init_all(ac, av, &sim))
 		return (1);
-	if (!create_coders(&sim))
+	if (!create_threads(&sim))
 		return (1);
-
-	printf("nb_codes 	%d\n", sim.conf.nb_coders);
-	printf("time_to_burnout %d\n", sim.conf.time_to_burnout);
-	printf("time_to_compile %d\n", sim.conf.time_to_compile);
-	printf("time_to_debug 	%d\n", sim.conf.time_to_debug);
-	printf("time_to_refacto	%d\n", sim.conf.time_to_refactor);
-	printf("nb_of_comp_req 	%d\n", sim.conf.nb_of_comp_req);
-	printf("dongle_cooldown %d\n", sim.conf.dongle_cooldown);
-	printf("scheduler 	%d\n", sim.conf.scheduler);
+	start_sim(&sim);
+	if (!threads_join(&sim))
+		return (1);
+	return (0);
 }

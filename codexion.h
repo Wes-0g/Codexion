@@ -61,6 +61,8 @@ struct	s_sim
 
 	t_coder		*coders;
 	t_dongle	*dongles;
+
+	pthread_t	monitor;
 };
 
 struct	s_dongle

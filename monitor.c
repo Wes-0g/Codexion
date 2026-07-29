@@ -56,6 +56,10 @@ void	*monitor_routine(void *arg)
 	t_sim	*sim;
 
 	sim = (t_sim *)arg;
+	pthread_mutex_lock(&sim->sim_mtx);
+	while (!sim->simulation_started && !sim->stop)
+		pthread_cond_wait(&sim->cond, &sim->sim_mtx);
+	pthread_mutex_unlock(&sim->sim_mtx);
 	while (!flag_stop(sim))
 	{
 		burnout_check(sim);

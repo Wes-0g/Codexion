@@ -101,6 +101,8 @@ void	*routine(void *arg)
 	wait_for_start(sim);
 	if (flag_stop(sim))
 		return (NULL);
+	if (coder->id % 2 == 0)
+		custom_sleep(sim, sim->conf.time_to_compile + sim->conf.dongle_cooldown);
 	while (!flag_stop(sim))
 	{
 		if (!acquire_dongles(coder))

@@ -65,12 +65,15 @@ static int	init_coders(t_sim *sim)
 		sim->coders[i].id = i + 1;
 		sim->coders[i].compile_count = 0;
 		sim->coders[i].request_time = 0;
-		sim->coders[i].last_compile_start = 0;
-		sim->coders[i].deadline = sim->coders[i].last_compile_start
-			+ sim->conf.time_to_burnout;
-		sim->coders[i].right = &sim->dongles[(i + 1) % sim->conf.nb_coders];
-		sim->coders[i].left = &sim->dongles[(i - 1 + sim->conf.nb_coders)
-			% sim->conf.nb_coders];
+		// sim->coders[i].right = &sim->dongles[i];
+		// sim->coders[i].left = &sim->dongles[(i - 1 + sim->conf.nb_coders)
+		// 	% sim->conf.nb_coders];
+
+		sim->coders[i].left = &sim->dongles[i];
+		if (i == sim->conf.nb_coders - 1)
+			sim->coders[i].right = &sim->dongles[0];
+		else
+			sim->coders[i].right = &sim->dongles[i + 1];
 		sim->coders[i].sim = sim;
 		i++;
 	}

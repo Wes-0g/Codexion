@@ -14,10 +14,9 @@
 
 static int	can_take_dongle(t_coder *coder, t_dongle *lo, t_dongle *hi)
 {
-	return (get_time_ms() >= hi->available_at
-		&& get_time_ms() >= hi->available_at
-		&& heap_peek(lo->heap) == coder
-		&& heap_peek(lo->heap) == coder);
+	return (get_time_ms() >= lo->available_at
+		&& get_time_ms() >= hi->available_at && heap_peek(lo->heap) == coder
+		&& heap_peek(hi->heap) == coder);
 }
 
 static void	grab_dongle(t_coder *coder, t_dongle *dongle)
@@ -63,8 +62,10 @@ static int	try_acquire(t_coder *coder, t_dongle *lo, t_dongle *hi)
 
 int	acquire_dongles(t_coder *coder)
 {
-	t_dongle	*lo;
-	t_dongle	*hi;
+	t_dongle		*lo;
+	t_dongle		*hi;
+	struct timespec	ts;
+	long long		wake_at;
 
 	if (coder->left->id < coder->right->id)
 	{
@@ -76,12 +77,18 @@ int	acquire_dongles(t_coder *coder)
 		lo = coder->right;
 		hi = coder->left;
 	}
-	coder->request_time = get_time_ms();
 	while (!flag_stop(coder->sim))
 	{
+		coder->request_time = get_time_ms();
 		if (try_acquire(coder, lo, hi))
 			return (1);
 		acquire_clean(coder, lo, hi);
+
+		wake_at = lo->available_at;
+		if (hi->available_at < wake_at)
+			wake_at = hi->available_at;
+		ts.tv_sec = wake_at / 1000;
+		ts.tv_nsec = (wake_at % 1000) * 1000000LL;
 		pthread_mutex_lock(&coder->sim->sim_mtx);
 		if (!coder->sim->stop)
 			pthread_cond_wait(&coder->sim->cond, &coder->sim->sim_mtx);

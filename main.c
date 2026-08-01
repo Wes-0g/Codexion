@@ -42,6 +42,7 @@ static int	create_threads(t_sim *sim)
 		if (0 != pthread_create(&sim->coders[i].thread, NULL, routine,
 				&sim->coders[i]))
 			return (0);
+		sim->coders_ready++;
 		i++;
 	}
 	if (0 != pthread_create(&sim->monitor, NULL, monitor_routine, sim))

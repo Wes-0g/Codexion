@@ -45,25 +45,3 @@ int	heap_compare(t_coder *a, t_coder *b, int scheduler)
 		return (-1);
 	return (1);
 }
-
-void	heap_remove(t_heap *heap, t_coder *coder)
-{
-	int	i;
-	int	parent;
-
-	i = 0;
-	while (i < heap->size && heap->coders[i] != coder)
-		i++;
-	if (i == heap->size)
-		return ;
-	heap->size--;
-	if (i == heap->size)
-		return ;
-	heap->coders[i] = heap->coders[heap->size];
-	parent = (i - 1) / 2;
-	if (i && heap_compare(heap->coders[i], heap->coders[parent],
-			heap->conf.scheduler) < 0)
-		heapify_up(heap, i, heap->conf.scheduler);
-	else
-		heapify_down(heap, i, heap->conf.scheduler);
-}

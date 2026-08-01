@@ -50,3 +50,11 @@ void	custom_sleep(t_sim *sim, long long time)
 		usleep(500);
 	}
 }
+
+void	wait_for_start(t_sim *sim)
+{
+	pthread_mutex_lock(&sim->sim_mtx);
+	while (!sim->simulation_started && !sim->stop)
+		pthread_cond_wait(&sim->cond, &sim->sim_mtx);
+	pthread_mutex_unlock(&sim->sim_mtx);
+}

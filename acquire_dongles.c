@@ -12,87 +12,88 @@
 
 #include "codexion.h"
 
-static int	can_take_dongle(t_coder *coder, t_dongle *lo, t_dongle *hi)
+static void	one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right)
 {
-	return (get_time_ms() >= lo->available_at
-		&& get_time_ms() >= hi->available_at && heap_peek(lo->heap) == coder
-		&& heap_peek(hi->heap) == coder);
+	pthread_mutex_lock(&left->d_mtx);
+	coder->request_time = get_time_ms();
+	heap_push(left->heap, coder);
+	if (left != right)
+	{
+		pthread_mutex_lock(&right->d_mtx);
+		heap_push(right->heap, coder);
+	}
+	if ((heap_peek(left->heap) == coder
+			&& get_time_ms() >= left->available_at)
+		|| (heap_peek(right->heap) == coder
+			&& get_time_ms() >= left->available_at))
+	{
+		left->available_at = LLONG_MAX;
+		heap_pop(left->heap);
+		print_log(coder, "has taken a dongle");
+		if (left != right)
+		{
+			left->available_at = LLONG_MAX;
+			heap_pop(right->heap);
+			print_log(coder, "has taken a dongle");
+			pthread_mutex_unlock(&right->d_mtx);
+		}
+	}
 }
 
-static void	grab_dongle(t_coder *coder, t_dongle *dongle)
+static int	can_take_dongle(t_coder *coder, t_dongle *left, t_dongle *right)
 {
-	dongle->available_at = LLONG_MAX;
-	heap_pop(dongle->heap);
+	return (get_time_ms() >= left->available_at
+		&& get_time_ms() >= right->available_at
+		&& heap_peek(left->heap) == coder
+		&& heap_peek(right->heap) == coder);
+}
+
+static void	grab_dongles(t_coder *coder, t_dongle *left, t_dongle *right)
+{
+	left->available_at = LLONG_MAX;
+	right->available_at = LLONG_MAX;
+	heap_pop(left->heap);
+	heap_pop(right->heap);
+	print_log(coder, "has taken a dongle");
 	print_log(coder, "has taken a dongle");
 }
 
-static void	acquire_clean(t_coder *coder, t_dongle *lo, t_dongle *hi)
+static int	try_acquire(t_coder *coder, t_dongle *left, t_dongle *right)
 {
-	heap_remove(lo->heap, coder);
-	if (lo != hi)
+	pthread_mutex_lock(&left->d_mtx);
+	pthread_mutex_lock(&right->d_mtx);
+	coder->request_time = get_time_ms();
+	heap_push(left->heap, coder);
+	heap_push(right->heap, coder);
+	if (can_take_dongle(coder, left, right))
 	{
-		heap_remove(hi->heap, coder);
-		pthread_mutex_unlock(&hi->d_mtx);
-	}
-	pthread_mutex_unlock(&lo->d_mtx);
-}
-
-static int	try_acquire(t_coder *coder, t_dongle *lo, t_dongle *hi)
-{
-	pthread_mutex_lock(&lo->d_mtx);
-	heap_push(lo->heap, coder);
-	if (lo != hi)
-	{
-		pthread_mutex_lock(&hi->d_mtx);
-		heap_push(hi->heap, coder);
-	}
-	if (can_take_dongle(coder, lo, hi))
-	{
-		grab_dongle(coder, lo);
-		if (lo != hi)
-		{
-			grab_dongle(coder, hi);
-			pthread_mutex_unlock(&hi->d_mtx);
-		}
-		pthread_mutex_unlock(&lo->d_mtx);
+		grab_dongles(coder, left, right);
+		pthread_mutex_unlock(&left->d_mtx);
+		pthread_mutex_unlock(&right->d_mtx);
 		return (1);
 	}
+	pthread_mutex_unlock(&left->d_mtx);
+	pthread_mutex_unlock(&right->d_mtx);
 	return (0);
 }
 
 int	acquire_dongles(t_coder *coder)
 {
-	t_dongle		*lo;
-	t_dongle		*hi;
-	struct timespec	ts;
-	long long		wake_at;
+	t_dongle	*left;
+	t_dongle	*right;
 
-	if (coder->left->id < coder->right->id)
-	{
-		lo = coder->left;
-		hi = coder->right;
-	}
-	else
-	{
-		lo = coder->right;
-		hi = coder->left;
-	}
+	left = coder->left;
+	right = coder->right;
 	while (!flag_stop(coder->sim))
 	{
-		coder->request_time = get_time_ms();
-		if (try_acquire(coder, lo, hi))
+		if (coder->sim->conf.nb_coders == 1)
+		{
+			one_coder_routine(coder, left, right);
+			return (0);
+		}
+		if (try_acquire(coder, left, right))
 			return (1);
-		acquire_clean(coder, lo, hi);
-
-		wake_at = lo->available_at;
-		if (hi->available_at < wake_at)
-			wake_at = hi->available_at;
-		ts.tv_sec = wake_at / 1000;
-		ts.tv_nsec = (wake_at % 1000) * 1000000LL;
-		pthread_mutex_lock(&coder->sim->sim_mtx);
-		if (!coder->sim->stop)
-			pthread_cond_wait(&coder->sim->cond, &coder->sim->sim_mtx);
-		pthread_mutex_unlock(&coder->sim->sim_mtx);
+		usleep(300);
 	}
 	return (0);
 }

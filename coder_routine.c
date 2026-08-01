@@ -14,29 +14,17 @@
 
 static void	release_dongle(t_coder *coder)
 {
-	t_dongle	*lo;
-	t_dongle	*hi;
+	t_dongle	*left;
+	t_dongle	*right;
 
-	if (coder->left->id < coder->right->id)
-	{
-		lo = coder->left;
-		hi = coder->right;
-	}
-	else
-	{
-		lo = coder->right;
-		hi = coder->left;
-	}
-	pthread_mutex_lock(&lo->d_mtx);
-	lo->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
-	pthread_mutex_unlock(&lo->d_mtx);
-	if (hi != lo)
-	{
-		pthread_mutex_lock(&hi->d_mtx);
-		hi->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
-		pthread_mutex_unlock(&hi->d_mtx);
-	}
-	pthread_cond_broadcast(&coder->sim->cond);
+	left = coder->left;
+	right = coder->right;
+	pthread_mutex_lock(&left->d_mtx);
+	pthread_mutex_lock(&right->d_mtx);
+	left->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
+	right->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
+	pthread_mutex_unlock(&left->d_mtx);
+	pthread_mutex_unlock(&right->d_mtx);
 }
 
 static int	compile(t_coder *coder)
@@ -80,17 +68,6 @@ static int	refactor(t_coder *coder)
 	return (!flag_stop(sim));
 }
 
-static void	wait_for_start(t_sim *sim)
-{
-	pthread_mutex_lock(&sim->sim_mtx);
-	sim->coders_ready++;
-	if (sim->coders_ready == sim->conf.nb_coders)
-		pthread_cond_broadcast(&sim->cond);
-	while (!sim->simulation_started && !sim->stop)
-		pthread_cond_wait(&sim->cond, &sim->sim_mtx);
-	pthread_mutex_unlock(&sim->sim_mtx);
-}
-
 void	*routine(void *arg)
 {
 	t_coder	*coder;
@@ -102,7 +79,8 @@ void	*routine(void *arg)
 	if (flag_stop(sim))
 		return (NULL);
 	if (coder->id % 2 == 0)
-		custom_sleep(sim, sim->conf.time_to_compile + sim->conf.dongle_cooldown);
+		custom_sleep(sim, sim->conf.time_to_compile
+			+ sim->conf.dongle_cooldown);
 	while (!flag_stop(sim))
 	{
 		if (!acquire_dongles(coder))

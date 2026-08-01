@@ -105,7 +105,6 @@ void	swap(t_coder **a, t_coder **b);
 int	heap_push(t_heap *heap, t_coder *coder);
 t_coder	*heap_pop(t_heap *heap);
 t_coder	*heap_peek(t_heap *heap);
-void	heap_remove(t_heap *heap, t_coder *coder);
 void	heapify_up(t_heap *heap, int i, int scheduler);
 void	heapify_down(t_heap *heap, int i, int scheduler);
 int	heap_compare(t_coder *a, t_coder *b, int scheduler);
@@ -122,5 +121,6 @@ int	acquire_dongles(t_coder *coder);
 void	custom_sleep(t_sim *sim, long long time);
 void	*routine(void *arg);
 void	*monitor_routine(void *arg);
+void	wait_for_start(t_sim *sim);
 
 #endif

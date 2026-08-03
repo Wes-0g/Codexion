@@ -37,6 +37,7 @@ static void	one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right)
 			print_log(coder, "has taken a dongle", 0);
 			pthread_mutex_unlock(&right->d_mtx);
 		}
+		pthread_mutex_unlock(&left->d_mtx);
 	}
 }
 

@@ -29,12 +29,12 @@ static void	one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right)
 	{
 		left->available_at = LLONG_MAX;
 		heap_pop(left->heap);
-		print_log(coder, "has taken a dongle");
+		print_log(coder, "has taken a dongle", 0);
 		if (left != right)
 		{
 			left->available_at = LLONG_MAX;
 			heap_pop(right->heap);
-			print_log(coder, "has taken a dongle");
+			print_log(coder, "has taken a dongle", 0);
 			pthread_mutex_unlock(&right->d_mtx);
 		}
 	}
@@ -54,8 +54,8 @@ static void	grab_dongles(t_coder *coder, t_dongle *left, t_dongle *right)
 	right->available_at = LLONG_MAX;
 	heap_pop(left->heap);
 	heap_pop(right->heap);
-	print_log(coder, "has taken a dongle");
-	print_log(coder, "has taken a dongle");
+	print_log(coder, "has taken a dongle", 0);
+	print_log(coder, "has taken a dongle", 0);
 }
 
 static int	try_acquire(t_coder *coder, t_dongle *left, t_dongle *right)
@@ -63,8 +63,12 @@ static int	try_acquire(t_coder *coder, t_dongle *left, t_dongle *right)
 	pthread_mutex_lock(&left->d_mtx);
 	pthread_mutex_lock(&right->d_mtx);
 	coder->request_time = get_time_ms();
+	pthread_mutex_lock(&coder->sim->sim_mtx);
 	heap_push(left->heap, coder);
+	pthread_mutex_unlock(&coder->sim->sim_mtx);
+	pthread_mutex_lock(&coder->sim->sim_mtx);
 	heap_push(right->heap, coder);
+	pthread_mutex_unlock(&coder->sim->sim_mtx);
 	if (can_take_dongle(coder, left, right))
 	{
 		grab_dongles(coder, left, right);
@@ -82,8 +86,16 @@ int	acquire_dongles(t_coder *coder)
 	t_dongle	*left;
 	t_dongle	*right;
 
-	left = coder->left;
-	right = coder->right;
+	if (coder->left > coder->right)
+	{
+		left = coder->right;
+		right = coder->left;
+	}
+	else
+	{
+		left = coder->left;
+		right = coder->right;
+	}
 	while (!flag_stop(coder->sim))
 	{
 		if (coder->sim->conf.nb_coders == 1)

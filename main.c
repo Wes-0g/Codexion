@@ -17,8 +17,6 @@ static void	start_sim(t_sim *sim)
 	int	i;
 
 	pthread_mutex_lock(&sim->sim_mtx);
-	while (sim->coders_ready < sim->conf.nb_coders && !sim->stop)
-		pthread_cond_wait(&sim->cond, &sim->sim_mtx);
 	sim->start_ms = get_time_ms();
 	i = 0;
 	while (i < sim->conf.nb_coders)

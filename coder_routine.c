@@ -17,8 +17,16 @@ static void	release_dongle(t_coder *coder)
 	t_dongle	*left;
 	t_dongle	*right;
 
-	left = coder->left;
-	right = coder->right;
+	if (coder->left > coder->right)
+	{
+		left = coder->right;
+		right = coder->left;
+	}
+	else
+	{
+		left = coder->left;
+		right = coder->right;
+	}
 	pthread_mutex_lock(&left->d_mtx);
 	pthread_mutex_lock(&right->d_mtx);
 	left->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
@@ -39,7 +47,7 @@ static int	compile(t_coder *coder)
 	coder->deadline = coder->last_compile_start + sim->conf.time_to_burnout;
 	coder->compile_count++;
 	pthread_mutex_unlock(&sim->sim_mtx);
-	print_log(coder, "is compiling");
+	print_log(coder, "is compiling", 0);
 	custom_sleep(sim, sim->conf.time_to_compile);
 	return (!flag_stop(sim));
 }
@@ -51,7 +59,7 @@ static int	debug(t_coder *coder)
 	sim = coder->sim;
 	if (flag_stop(sim))
 		return (0);
-	print_log(coder, "is debugging");
+	print_log(coder, "is debugging", 0);
 	custom_sleep(sim, sim->conf.time_to_debug);
 	return (!flag_stop(sim));
 }
@@ -63,7 +71,7 @@ static int	refactor(t_coder *coder)
 	sim = coder->sim;
 	if (flag_stop(sim))
 		return (0);
-	print_log(coder, "is refactoring");
+	print_log(coder, "is refactoring", 0);
 	custom_sleep(sim, sim->conf.time_to_refactor);
 	return (!flag_stop(sim));
 }

@@ -12,15 +12,6 @@
 
 #include "codexion.h"
 
-static void	wake_coders(t_sim *sim)
-{
-	pthread_mutex_lock(&sim->sim_mtx);
-	if (sim->coders_ready == sim->conf.nb_coders)
-		pthread_cond_broadcast(&sim->cond);
-
-	pthread_mutex_unlock(&sim->sim_mtx);
-}
-
 static void	burnout_check(t_sim *sim)
 {
 	int	i;
@@ -33,7 +24,7 @@ static void	burnout_check(t_sim *sim)
 		{
 			pthread_mutex_unlock(&sim->sim_mtx);
 			set_stop(sim);
-			print_log(&sim->coders[i], "burned out");
+			print_log(&sim->coders[i], "burned out", 1);
 			return ;
 		}
 		i++;
@@ -65,7 +56,7 @@ void	*monitor_routine(void *arg)
 	t_sim	*sim;
 
 	sim = (t_sim *)arg;
-	wake_coders(sim);
+	wait_for_start(sim);
 	while (!flag_stop(sim))
 	{
 		burnout_check(sim);

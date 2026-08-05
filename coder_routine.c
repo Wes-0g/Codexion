@@ -17,7 +17,7 @@ static void	release_dongle(t_coder *coder)
 	t_dongle	*left;
 	t_dongle	*right;
 
-	if (coder->left > coder->right)
+	if (coder->left->id > coder->right->id)
 	{
 		left = coder->right;
 		right = coder->left;
@@ -89,6 +89,8 @@ void	*routine(void *arg)
 	if (coder->id % 2 == 0)
 		custom_sleep(sim, sim->conf.time_to_compile
 			+ sim->conf.dongle_cooldown);
+	else if (coder->id == sim->conf.nb_coders && sim->conf.nb_coders % 2 == 1)
+			custom_sleep(sim, sim->conf.time_to_compile + sim->conf.dongle_cooldown);
 	while (!flag_stop(sim))
 	{
 		if (!acquire_dongles(coder))

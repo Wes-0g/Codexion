@@ -41,6 +41,12 @@ int	heap_compare(t_coder *a, t_coder *b, int scheduler)
 			return (-1);
 		return (1);
 	}
+	if (a->request_time != b->request_time)
+	{
+		if (a->request_time < b->request_time)
+			return (-1);
+		return (1);
+	}
 	if (a->id < b->id)
 		return (-1);
 	return (1);

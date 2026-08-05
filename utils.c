@@ -16,7 +16,6 @@ void	set_stop(t_sim *sim)
 {
 	pthread_mutex_lock(&sim->sim_mtx);
 	sim->stop = 1;
-	pthread_cond_broadcast(&sim->cond);
 	pthread_mutex_unlock(&sim->sim_mtx);
 }
 

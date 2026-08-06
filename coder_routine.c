@@ -42,6 +42,8 @@ static int	compile(t_coder *coder)
 	sim = coder->sim;
 	if (flag_stop(sim))
 		return (0);
+	if (!acquire_dongles(coder))
+		return (0);
 	pthread_mutex_lock(&sim->sim_mtx);
 	coder->last_compile_start = get_time_ms();
 	coder->deadline = coder->last_compile_start + sim->conf.time_to_burnout;
@@ -90,11 +92,10 @@ void	*routine(void *arg)
 		custom_sleep(sim, sim->conf.time_to_compile
 			+ sim->conf.dongle_cooldown);
 	else if (coder->id == sim->conf.nb_coders && sim->conf.nb_coders % 2 == 1)
-			custom_sleep(sim, sim->conf.time_to_compile + sim->conf.dongle_cooldown);
+		custom_sleep(sim, sim->conf.time_to_compile
+			+ sim->conf.dongle_cooldown);
 	while (!flag_stop(sim))
 	{
-		if (!acquire_dongles(coder))
-			break ;
 		if (!compile(coder))
 			break ;
 		release_dongle(coder);

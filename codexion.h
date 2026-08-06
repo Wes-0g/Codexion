@@ -15,10 +15,9 @@
 
 # include <pthread.h>
 # include <stdio.h>
-#include <limits.h>
+# include <limits.h>
 # include <stdlib.h>
 # include <string.h>
-# include <time.h>
 # include <unistd.h>
 
 # define FIFO 0
@@ -43,84 +42,85 @@ typedef struct s_config
 
 struct	s_sim
 {
-	long long	start_ms;
-	int	stop;
-	int	coders_ready;
-	int	simulation_started;
+	long long		start_ms;
+	int				stop;
+	int				coders_ready;
+	int				simulation_started;
 
-	t_config	conf;
-	pthread_mutex_t		log_mtx;
-	pthread_mutex_t sim_mtx;
+	t_config		conf;
+	pthread_mutex_t	log_mtx;
+	pthread_mutex_t	sim_mtx;
 	pthread_cond_t	cond;
 
-	int	dongles_init;
-	int	coders_init;
-	int	log_mtx_init;
-	int	sim_mtx_init;
-	int	cond_init;
+	int				dongles_init;
+	int				coders_init;
+	int				log_mtx_init;
+	int				sim_mtx_init;
+	int				cond_init;
 
-	t_coder		*coders;
-	t_dongle	*dongles;
+	t_coder			*coders;
+	t_dongle		*dongles;
 
-	pthread_t	monitor;
+	pthread_t		monitor;
 };
 
 struct	s_dongle
 {
-	int	id;
-	int	mutex_init;
-	long long	available_at;
+	int				id;
+	int				mutex_init;
+	long long		available_at;
 	pthread_mutex_t	d_mtx;
-	t_heap	*heap;
+	t_heap			*heap;
 };
 
 struct	s_coder
 {
-	pthread_t			thread;
-	t_dongle			*left;
-	t_dongle			*right;
-	t_sim				*sim;
-	int	id;
+	pthread_t	thread;
+	t_dongle	*left;
+	t_dongle	*right;
+	t_sim		*sim;
+	int			id;
 	long long	request_time;
 	long long	deadline;
 	long long	last_compile_start;
-	int	compile_count;
+	int			compile_count;
 };
 
 struct	s_heap
 {
 	t_config	conf;
-	t_coder	**coders;
-	int	size;
-	int	capacity;
+	t_coder		**coders;
+	int			size;
+	int			capacity;
 
 };
 
-int	validate_args(int ac, char **av);
-int	ft_atoi(char *nptr, int *out);
-int	scheduler_parser(char *s, int *out);
-int	arg_parser(int ac, char **av, t_config *conf);
+int			validate_args(int ac, char **av);
+int			ft_atoi(char *nptr, int *out);
+int			scheduler_parser(char *s, int *out);
+int			arg_parser(int ac, char **av, t_config *conf);
 
-void	swap(t_coder **a, t_coder **b);
-int	heap_push(t_heap *heap, t_coder *coder);
-t_coder	*heap_pop(t_heap *heap);
-t_coder	*heap_peek(t_heap *heap);
-void	heapify_up(t_heap *heap, int i, int scheduler);
-void	heapify_down(t_heap *heap, int i, int scheduler);
-int	heap_compare(t_coder *a, t_coder *b, int scheduler);
-t_heap	*create_heap(int capacity, t_config conf);
-void	heap_destroy(t_heap *heap);
+void		swap(t_coder **a, t_coder **b);
+int			heap_push(t_heap *heap, t_coder *coder);
+t_coder		*heap_pop(t_heap *heap);
+t_coder		*heap_peek(t_heap *heap);
+void		heapify_up(t_heap *heap, int i, int scheduler);
+void		heapify_down(t_heap *heap, int i, int scheduler);
+int			heap_compare(t_coder *a, t_coder *b, int scheduler);
+t_heap		*create_heap(int capacity, t_config conf);
+void		heap_destroy(t_heap *heap);
 
 long long	get_time_ms(void);
 
-int	init_sim(t_sim *sim);
-int	flag_stop(t_sim *sim);
-void set_stop(t_sim *sim);
-void	print_log(t_coder *coder, char *msg, int flag);
-int	acquire_dongles(t_coder *coder);
-void	custom_sleep(t_sim *sim, long long time);
-void	*routine(void *arg);
-void	*monitor_routine(void *arg);
-void	wait_for_start(t_sim *sim);
+int			init_sim(t_sim *sim);
+int			flag_stop(t_sim *sim);
+void		set_stop(t_sim *sim);
+void		print_log(t_coder *coder, char *msg, int flag);
+int			acquire_dongles(t_coder *coder);
+void		custom_sleep(t_sim *sim, long long time);
+void		*routine(void *arg);
+void		*monitor_routine(void *arg);
+void		wait_for_start(t_sim *sim);
+void		one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right);
 
 #endif

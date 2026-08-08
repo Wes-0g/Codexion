@@ -37,8 +37,8 @@ static void	grab_dongles(t_coder *coder, t_dongle *left, t_dongle *right)
 	right->available_at = LLONG_MAX;
 	heap_pop(left->heap);
 	heap_pop(right->heap);
-	print_log(coder, "has taken a dongle", 0);
-	print_log(coder, "has taken a dongle", 0);
+	print_log(coder, "has taken a dongle");
+	print_log(coder, "has taken a dongle");
 }
 
 static int	try_acquire(t_coder *coder, t_dongle *left, t_dongle *right)

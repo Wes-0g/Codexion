@@ -6,7 +6,7 @@
 #    By: zel-fati <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/07/06 21:25:05 by zel-fati          #+#    #+#              #
-#    Updated: 2026/08/06 05:27:40 by zel-fati         ###   ########.fr        #
+#    Updated: 2026/08/07 17:14:32 by zel-fati         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,7 +27,8 @@ SRC	=	codex/main.c \
 		codex/coder_routine.c \
 		codex/monitor.c \
 		codex/utils.c \
-		codex/one_coder.c
+		codex/one_coder.c \
+		codex/cleanup_and_utils.c
 
 OBJ	= $(SRC:%.c=%.o)
 

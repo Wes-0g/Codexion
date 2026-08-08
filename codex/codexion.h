@@ -115,12 +115,13 @@ long long	get_time_ms(void);
 int			init_sim(t_sim *sim);
 int			flag_stop(t_sim *sim);
 void		set_stop(t_sim *sim);
-void		print_log(t_coder *coder, char *msg, int flag);
+void		print_log(t_coder *coder, char *msg);
 int			acquire_dongles(t_coder *coder);
 void		custom_sleep(t_sim *sim, long long time);
 void		*routine(void *arg);
 void		*monitor_routine(void *arg);
 void		wait_for_start(t_sim *sim);
 void		one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right);
+void		sim_clean_up(t_sim *sim);
 
 #endif

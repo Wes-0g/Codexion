@@ -28,12 +28,12 @@ void	one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right)
 	{
 		left->available_at = LLONG_MAX;
 		heap_pop(left->heap);
-		print_log(coder, "has taken a dongle", 0);
+		print_log(coder, "has taken a dongle");
 		if (left != right)
 		{
 			left->available_at = LLONG_MAX;
 			heap_pop(right->heap);
-			print_log(coder, "has taken a dongle", 0);
+			print_log(coder, "has taken a dongle");
 			pthread_mutex_unlock(&right->d_mtx);
 		}
 		pthread_mutex_unlock(&left->d_mtx);

@@ -29,13 +29,12 @@ int	flag_stop(t_sim *sim)
 	return (stop);
 }
 
-void	print_log(t_coder *coder, char *msg, int flag)
+void	print_log(t_coder *coder, char *msg)
 {
-	if (flag_stop(coder->sim) && !flag)
-		return ;
 	pthread_mutex_lock(&coder->sim->log_mtx);
-	printf("%lld %d %s\n", get_time_ms() - coder->sim->start_ms, coder->id,
-		msg);
+	if (!flag_stop(coder->sim))
+		printf("%lld %d %s\n", get_time_ms() - coder->sim->start_ms, coder->id,
+			msg);
 	pthread_mutex_unlock(&coder->sim->log_mtx);
 }
 

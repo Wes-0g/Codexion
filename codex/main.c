@@ -83,7 +83,6 @@ int	main(int ac, char **av)
 {
 	t_sim	sim;
 
-	// if anythings fails, clean up
 	if (!init_all(ac, av, &sim))
 		return (1);
 	if (!create_threads(&sim))
@@ -91,5 +90,6 @@ int	main(int ac, char **av)
 	start_sim(&sim);
 	if (!threads_join(&sim))
 		return (1);
+	sim_clean_up(&sim);
 	return (0);
 }

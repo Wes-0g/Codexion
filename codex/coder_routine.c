@@ -49,7 +49,7 @@ static int	compile(t_coder *coder)
 	coder->deadline = coder->last_compile_start + sim->conf.time_to_burnout;
 	coder->compile_count++;
 	pthread_mutex_unlock(&sim->sim_mtx);
-	print_log(coder, "is compiling", 0);
+	print_log(coder, "is compiling");
 	custom_sleep(sim, sim->conf.time_to_compile);
 	return (!flag_stop(sim));
 }
@@ -61,7 +61,7 @@ static int	debug(t_coder *coder)
 	sim = coder->sim;
 	if (flag_stop(sim))
 		return (0);
-	print_log(coder, "is debugging", 0);
+	print_log(coder, "is debugging");
 	custom_sleep(sim, sim->conf.time_to_debug);
 	return (!flag_stop(sim));
 }
@@ -73,7 +73,7 @@ static int	refactor(t_coder *coder)
 	sim = coder->sim;
 	if (flag_stop(sim))
 		return (0);
-	print_log(coder, "is refactoring", 0);
+	print_log(coder, "is refactoring");
 	custom_sleep(sim, sim->conf.time_to_refactor);
 	return (!flag_stop(sim));
 }

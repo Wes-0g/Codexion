@@ -12,6 +12,16 @@
 
 #include "codexion.h"
 
+int	join_started_on_failure(t_sim *sim, int i)
+{
+	set_stop(sim);
+	while (--i >= 0)
+	{
+		pthread_join(sim->coders[i].thread, NULL);
+	}
+	return (0);
+}
+
 void	sim_clean_up(t_sim *sim)
 {
 	int	i;

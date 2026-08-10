@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-static void	dongle_free(t_sim *sim, int i)
+static int	dongle_free(t_sim *sim, int i)
 {
 	while (i >= 0)
 	{
@@ -23,6 +23,7 @@ static void	dongle_free(t_sim *sim, int i)
 	}
 	free(sim->dongles);
 	sim->dongles = NULL;
+	return (0);
 }
 
 static int	init_dongles(t_sim *sim)
@@ -41,9 +42,9 @@ static int	init_dongles(t_sim *sim)
 		sim->dongles[i].mutex_init = 0;
 		sim->dongles[i].heap = create_heap(2, sim->conf);
 		if (!sim->dongles[i].heap)
-			return (dongle_free(sim, i), 0);
+			return (dongle_free(sim, i));
 		if (0 != pthread_mutex_init(&sim->dongles[i].d_mtx, NULL))
-			return (dongle_free(sim, i), 0);
+			return (dongle_free(sim, i));
 		sim->dongles[i].mutex_init = 1;
 		i++;
 	}
@@ -77,7 +78,7 @@ static int	init_coders(t_sim *sim)
 	return (1);
 }
 
-static void	init_sim_error(t_sim *sim)
+static int	init_sim_error(t_sim *sim)
 {
 	if (sim->log_mtx_init)
 		pthread_mutex_destroy(&sim->log_mtx);
@@ -92,6 +93,7 @@ static void	init_sim_error(t_sim *sim)
 		free(sim->coders);
 		sim->coders = NULL;
 	}
+	return (0);
 }
 
 int	init_sim(t_sim *sim)
@@ -107,14 +109,14 @@ int	init_sim(t_sim *sim)
 		return (0);
 	sim->log_mtx_init = 1;
 	if (0 != pthread_mutex_init(&sim->sim_mtx, NULL))
-		return (init_sim_error(sim), 0);
+		return (init_sim_error(sim));
 	sim->sim_mtx_init = 1;
 	if (0 != pthread_cond_init(&sim->cond, NULL))
-		return (init_sim_error(sim), 0);
+		return (init_sim_error(sim));
 	sim->cond_init = 1;
 	if (!init_dongles(sim))
-		return (init_sim_error(sim), 0);
+		return (init_sim_error(sim));
 	if (!init_coders(sim))
-		return (init_sim_error(sim), 0);
+		return (init_sim_error(sim));
 	return (1);
 }

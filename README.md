@@ -6,7 +6,7 @@
 
 ### Goal
 
-Codexion simulates `number_of_coders` coders sitting in a circular co-working hub, each needing two shared USB dongles — one from each neighbor — to compile. There are exactly as many dongles as coders, one between each adjacent pair. The goal of the project is to implement fair, deadlock-free, starvation-free access to that shared resource under two pluggable arbitration policies, **fifo** and **edf**, using only POSIX threads, mutexes, and a hand-rolled priority queue.
+Codexion simulates `number_of_coders` coders sitting in a circular table, each needing two shared USB dongles — one from each neighbor — to compile. There are exactly as many dongles as coders, one between each coder. The goal of the project is to implement fair, deadlock-free, starvation-free access to that shared resource under two pluggable arbitration policies, **fifo** and **edf**, using only POSIX threads, mutexes, and a priority queue.
 
 ### Overview
 
@@ -68,13 +68,10 @@ All 8 arguments are mandatory. `validate_args`/`ft_atoi` reject non-integers, an
 - **`log_mtx`:** serializes every log line written by any coder thread or the monitor thread.
 - **The heap:** an array-based binary min-heap implemented from scratch (`heap_push`, `heap_pop`, `heap_peek`, `heapify_up`, `heapify_down` — no standard library priority queue). `heap_compare` is the single place the fifo/edf policy and its tie-breaking rule are defined, so both `heapify` directions and the removal logic always agree on ordering.
 - **Race-prevention example:** `try_acquire` locks both of a coder's dongles before calling `can_take_dongle`, and only pops from the heaps / marks the dongles held while still holding both locks. No other coder can observe a half-updated state or believe it has acquired a dongle that's being granted to someone else in the same instant.
-- **Monitor/coder coordination example:** `burnout_check` and `success_check` only ever read a coder's `deadline` and `compile_count` while holding `sim_mtx` — the exact same lock `compile()` uses when it writes those same fields after a successful acquisition. This shared-lock discipline is what closed a real race found during development, where the monitor could otherwise read a stale, pre-simulation deadline before `start_sim` had finished stamping every coder's real one, and report a false burnout at `t=0`.
+- **Monitor/coder coordination example:** `burnout_check` and `success_check` only ever read a coder's `deadline` and `compile_count` while holding `sim_mtx` — the exact same lock `compile()` uses when it writes those same fields after a successful acquisition. This shared-lock discipline is what closed a real race found during development, where the monitor could otherwise read a stale, pre-simulation deadline before `start_sim` had finished stamping every coder's real one, and report a false burnout.
 
 # Resources
 
 - POSIX Threads Programming (LLNL Tutorial) — mutexes, condition variables, thread lifecycle
 - man pages: `pthread_mutex_init(3)`, `pthread_cond_wait(3)`, `pthread_cond_broadcast(3)`, `clock_gettime(3)`
-- Wikipedia — Earliest Deadline First scheduling, Coffman conditions for deadlock
-- *The Little Book of Semaphores* (Allen B. Downey) — dining philosophers and resource-ordering deadlock avoidance
-
-**AI usage:** Claude (Anthropic) was used throughout as a design and debugging partner rather than a code generator. It helped work through the dongle-acquisition strategy and catch a real lock-ordering deadlock before it shipped, traced a false-positive burnout back to a barrier/monitor race, diagnosed a seating-topology bug that was silently splitting coders into disconnected contention groups, and flagged several mutex-leak and use-after-free bugs in the heap and cleanup code. It was also used to reason through a condition-variable-based waiting design for dongle acquisition; after weighing its added complexity against a simpler bounded-retry polling loop, the polling approach in `acquire_dongles` was the one kept. Every fix was traced by hand or verified with `gdb`/`valgrind` before being adopted, and all code was written and is understood by the author.
+- Wikipedia — Earliest Deadline First scheduling, Coffman conditions for deadlockto

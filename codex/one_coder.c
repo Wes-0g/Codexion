@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-void	one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right)
+int	one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right)
 {
 	pthread_mutex_lock(&left->d_mtx);
 	coder->request_time = get_time_ms();
@@ -38,4 +38,5 @@ void	one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right)
 		}
 		pthread_mutex_unlock(&left->d_mtx);
 	}
+	return (0);
 }

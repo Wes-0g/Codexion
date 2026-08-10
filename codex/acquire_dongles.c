@@ -73,7 +73,7 @@ int	acquire_dongles(t_coder *coder)
 		right = coder->right;
 	}
 	if (coder->sim->conf.nb_coders == 1)
-		return (one_coder_routine(coder, left, right), 0);
+		return (one_coder_routine(coder, left, right));
 	enqueue_coder(coder, left, right);
 	while (!flag_stop(coder->sim))
 	{

@@ -39,12 +39,12 @@ static int	create_threads(t_sim *sim)
 	{
 		if (0 != pthread_create(&sim->coders[i].thread, NULL, routine,
 				&sim->coders[i]))
-			return (0);
+			return (join_started_on_failure(sim, i));
 		sim->coders_ready++;
 		i++;
 	}
 	if (0 != pthread_create(&sim->monitor, NULL, monitor_routine, sim))
-		return (0);
+		return (join_started_on_failure(sim, i));
 	return (1);
 }
 
@@ -86,7 +86,10 @@ int	main(int ac, char **av)
 	if (!init_all(ac, av, &sim))
 		return (1);
 	if (!create_threads(&sim))
+	{
+		sim_clean_up(&sim);
 		return (1);
+	}
 	start_sim(&sim);
 	if (!threads_join(&sim))
 		return (1);

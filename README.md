@@ -31,16 +31,16 @@ Builds with `-Wall -Wextra -Werror -pthread` and produces the `codexion` binary 
            time_to_refactor number_of_compiles_required dongle_cooldown scheduler
 ```
 
-| Argument | Meaning |
-|---|---|
-| `number_of_coders` | Number of coders, and number of dongles |
-| `time_to_burnout` | Max ms without starting a compile before burnout |
-| `time_to_compile` | Compile duration in ms |
-| `time_to_debug` | Debug duration in ms |
-| `time_to_refactor` | Refactor duration in ms |
+| Argument           | Meaning                                                    |
+|--------------------|------------------------------------------------------------|
+| `number_of_coders` | Number of coders, and number of dongles                    |
+| `time_to_burnout`  | Max ms without starting a compile before burnout           |
+| `time_to_compile`  | Compile duration in ms                                     |
+| `time_to_debug`    | Debug duration in ms                                       |
+| `time_to_refactor` | Refactor duration in ms                                    |
 | `number_of_compiles_required` | Compiles needed per coder for a successful stop |
-| `dongle_cooldown` | Ms a released dongle stays unavailable |
-| `scheduler` | `fifo` or `edf` |
+| `dongle_cooldown`  | Ms a released dongle stays unavailable                     |
+| `scheduler`        | `fifo` or `edf`                                            |
 
 Example:
 
@@ -52,7 +52,18 @@ All 8 arguments are mandatory. `validate_args`/`ft_atoi` reject non-integers, an
 
 # Blocking cases handled
 
-- **Deadlock prevention (Coffman's circular-wait):** before touching any lock, `acquire_dongles` and `release_dongle` both sort a coder's two neighbor dongles by id into a fixed `left`/`right` pair (lower id first) and always lock them in that same order. Since every coder in the circle uses the same rule, no cycle of threads can ever each hold one dongle while waiting on another.
+**Deadlock prevention (Coffman's circular-wait):** a coder never holds one dongle while waiting for the other. To acquire its two neighbor dongles, the coder must simultaneously be at the root of both dongle heaps, and both dongles must be available. `can_take_dongle` checks that both `available_at` timestamps have been reached and that the coder is the heap owner of both dongles. Only when all conditions are satisfied can the coder take both dongles and begin compiling. Therefore, a coder can never hold one dongle while waiting for another, which eliminates the hold-and-wait condition required for a circular wait and prevents this form of deadlock.
+
+```c
+static int    can_take_dongle(t_coder *coder, t_dongle *left, t_dongle *right)
+{
+    return (get_time_ms() >= left->available_at
+        && get_time_ms() >= right->available_at
+        && heap_peek(left->heap) == coder
+        && heap_peek(right->heap) == coder);
+}
+```
+
 - **Starvation prevention:** each dongle owns its own capacity-2 heap of pending requests. `heap_compare` orders entries by the active scheduler's key — `request_time` under `fifo`, `deadline` under `edf` — and falls through to `request_time` and finally coder `id` as deterministic tie-breakers, so no two requests are ever treated as equal by accident. A coder is only granted a dongle once it is simultaneously at the front of *both* of its dongles' heaps.
 - **Startup-timing fairness:** during testing, coders that all started their first acquisition attempt at the same instant could fall into a stable pattern where one subset of coders kept winning against another. `routine` now deliberately delays every even-numbered coder (and, when `number_of_coders` is odd, the last coder as well) by one compile-plus-cooldown period before its very first attempt, which breaks that symmetry.
 - **Cooldown handling:** each dongle's `available_at` field is a single sentinel value doing three jobs — `LLONG_MAX` while held, a future timestamp while cooling down, and any timestamp at or before "now" once genuinely free. `can_take_dongle` checks it directly against the current time, so a dongle can never be re-taken before `dongle_cooldown` ms have elapsed.

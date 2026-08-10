@@ -121,7 +121,8 @@ void		custom_sleep(t_sim *sim, long long time);
 void		*routine(void *arg);
 void		*monitor_routine(void *arg);
 void		wait_for_start(t_sim *sim);
-void		one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right);
+int			one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right);
+int			join_started_on_failure(t_sim *sim, int i);
 void		sim_clean_up(t_sim *sim);
 
 #endif

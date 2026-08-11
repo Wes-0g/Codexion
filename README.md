@@ -77,10 +77,15 @@ static int    can_take_dongle(t_coder *coder, t_dongle *left, t_dongle *right)
 # Thread synchronization mechanisms
 
 - **`d_mtx` (per dongle):** guards a single dongle's `available_at` and its private heap. `acquire_dongles` and `release_dongle` always lock a coder's two dongles in the same id-ascending order established once at the top of each function.
+
 - **`sim_mtx` + `cond` (simulation-wide):** protects every field shared across threads that isn't dongle-specific — `stop`, `simulation_started`, and each coder's `deadline` / `last_compile_start` / `compile_count`. `wait_for_start` blocks every coder and the monitor on `cond` until `start_sim` stamps a single shared `start_ms` for all of them and broadcasts; `set_stop`/`flag_stop` use the same lock so every thread observes a stop consistently.
+
 - **`log_mtx`:** serializes every log line written by any coder thread or the monitor thread.
+
 - **The heap:** an array-based binary min-heap implemented from scratch (`heap_push`, `heap_pop`, `heap_peek`, `heapify_up`, `heapify_down` — no standard library priority queue). `heap_compare` is the single place the fifo/edf policy and its tie-breaking rule are defined, so both `heapify` directions and the removal logic always agree on ordering.
+
 - **Race-prevention example:** `try_acquire` locks both of a coder's dongles before calling `can_take_dongle`, and only pops from the heaps / marks the dongles held while still holding both locks. No other coder can observe a half-updated state or believe it has acquired a dongle that's being granted to someone else in the same instant.
+
 - **Monitor/coder coordination example:** `burnout_check` and `success_check` only ever read a coder's `deadline` and `compile_count` while holding `sim_mtx` — the exact same lock `compile()` uses when it writes those same fields after a successful acquisition. This shared-lock discipline is what closed a real race found during development, where the monitor could otherwise read a stale, pre-simulation deadline before `start_sim` had finished stamping every coder's real one, and report a false burnout.
 
 # Resources

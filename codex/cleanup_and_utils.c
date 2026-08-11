@@ -15,6 +15,7 @@
 int	join_started_on_failure(t_sim *sim, int i)
 {
 	set_stop(sim);
+	pthread_cond_broadcast(&sim->cond);
 	while (--i >= 0)
 	{
 		pthread_join(sim->coders[i].thread, NULL);

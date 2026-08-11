@@ -92,8 +92,7 @@ void	*routine(void *arg)
 		custom_sleep(sim, sim->conf.time_to_compile
 			+ sim->conf.dongle_cooldown);
 	else if (coder->id == sim->conf.nb_coders && sim->conf.nb_coders % 2 == 1)
-		custom_sleep(sim, sim->conf.time_to_compile
-			+ sim->conf.dongle_cooldown);
+		custom_sleep(sim, sim->conf.time_to_compile);
 	while (!flag_stop(sim))
 	{
 		if (!compile(coder))

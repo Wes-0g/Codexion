@@ -65,11 +65,13 @@ static int    can_take_dongle(t_coder *coder, t_dongle *left, t_dongle *right)
 ```
 
 - **Starvation prevention:** each dongle owns its own capacity-2 heap of pending requests. `heap_compare` orders entries by the active scheduler's key — `request_time` under `fifo`, `deadline` under `edf` — and falls through to `request_time` and finally coder `id` as deterministic tie-breakers, so no two requests are ever treated as equal by accident. A coder is only granted a dongle once it is simultaneously at the front of *both* of its dongles' heaps.
-- **Startup-timing fairness:** during testing, coders that all started their first acquisition attempt at the same instant could fall into a stable pattern where one subset of coders kept winning against another. `routine` now deliberately delays every even-numbered coder (and, when `number_of_coders` is odd, the last coder as well) by one compile-plus-cooldown period before its very first attempt, which breaks that symmetry.
+
 - **Cooldown handling:** each dongle's `available_at` field is a single sentinel value doing three jobs — `LLONG_MAX` while held, a future timestamp while cooling down, and any timestamp at or before "now" once genuinely free. `can_take_dongle` checks it directly against the current time, so a dongle can never be re-taken before `dongle_cooldown` ms have elapsed.
-- **Single-coder edge case:** with one coder there is exactly one dongle, so two-handed compiling is structurally impossible. Rather than special-casing the general two-dongle algorithm, this coder is routed to its own `one_coder_routine` — it will always eventually burn out, which is the correct behavior for this input.
+
 - **Precise burnout detection:** the monitor thread polls every coder's `deadline` under `sim_mtx` on a tight 500-microsecond interval, independently of every coder thread, so a burnout is caught and logged with only a small, bounded delay.
+
 - **Log serialization:** `print_log`, and the monitor's own burnout print, always lock `log_mtx` around both the timestamp read and the `printf` call together, so two threads can never interleave partial output on the same line.
+
 - **Clean shutdown on partial startup failure:** if `pthread_create` fails partway through spawning coder threads, `join_started_on_failure` signals stop and joins whichever threads did start before returning, so the program never exits while an orphaned thread is still touching memory that's about to be freed.
 
 # Thread synchronization mechanisms
@@ -83,6 +85,13 @@ static int    can_take_dongle(t_coder *coder, t_dongle *left, t_dongle *right)
 
 # Resources
 
-- POSIX Threads Programming (LLNL Tutorial) — mutexes, condition variables, thread lifecycle
-- man pages: `pthread_mutex_init(3)`, `pthread_cond_wait(3)`, `pthread_cond_broadcast(3)`, `clock_gettime(3)`
-- Wikipedia — Earliest Deadline First scheduling, Coffman conditions for deadlockto
+- [The Linux Programming Interface](https://broman.dev/download/The%20Linux%20Programming%20Interface.pdf)
+- [Min heap - GeeksforGeeks](https://www.geeksforgeeks.org/c/c-program-to-implement-binary-heap/)
+- [Linux manual page](https://man7.org/linux/man-pages/)
+
+### AI Usage
+
+AI tools were used in this project specifically for:
+- **Documentation:** drafting and refining this README, including working out clear, accurate wording for the concurrency guarantees the project makes.
+
+- **Understanding what a thread actually is:** explaining a POSIX thread as an OS-level concept — what is a thread, how a thread has its own call stack (separate from the process's other threads) while sharing the process's heap and global memory, what `pthread_attr_t` controls (e.g. stack size, detach state), and what happens at `pthread_create` at a lower level, before writing any of the thread-handling code in this project.

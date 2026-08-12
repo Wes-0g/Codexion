@@ -14,13 +14,13 @@
 
 static void	enqueue_coder(t_coder *coder, t_dongle *left, t_dongle *right)
 {
+	coder->request_time = get_time_ms();
 	pthread_mutex_lock(&left->d_mtx);
 	pthread_mutex_lock(&right->d_mtx);
-	coder->request_time = get_time_ms();
 	heap_push(left->heap, coder);
 	heap_push(right->heap, coder);
-	pthread_mutex_unlock(&left->d_mtx);
 	pthread_mutex_unlock(&right->d_mtx);
+	pthread_mutex_unlock(&left->d_mtx);
 }
 
 static int	can_take_dongle(t_coder *coder, t_dongle *left, t_dongle *right)
@@ -48,12 +48,12 @@ static int	try_acquire(t_coder *coder, t_dongle *left, t_dongle *right)
 	if (can_take_dongle(coder, left, right))
 	{
 		grab_dongles(coder, left, right);
-		pthread_mutex_unlock(&left->d_mtx);
 		pthread_mutex_unlock(&right->d_mtx);
+		pthread_mutex_unlock(&left->d_mtx);
 		return (1);
 	}
-	pthread_mutex_unlock(&left->d_mtx);
 	pthread_mutex_unlock(&right->d_mtx);
+	pthread_mutex_unlock(&left->d_mtx);
 	return (0);
 }
 

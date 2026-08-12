@@ -31,8 +31,8 @@ static void	release_dongle(t_coder *coder)
 	pthread_mutex_lock(&right->d_mtx);
 	left->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
 	right->available_at = get_time_ms() + coder->sim->conf.dongle_cooldown;
-	pthread_mutex_unlock(&left->d_mtx);
 	pthread_mutex_unlock(&right->d_mtx);
+	pthread_mutex_unlock(&left->d_mtx);
 }
 
 static int	compile(t_coder *coder)

@@ -14,8 +14,8 @@
 
 int	one_coder_routine(t_coder *coder, t_dongle *left, t_dongle *right)
 {
-	pthread_mutex_lock(&left->d_mtx);
 	coder->request_time = get_time_ms();
+	pthread_mutex_lock(&left->d_mtx);
 	heap_push(left->heap, coder);
 	if (left != right)
 	{
